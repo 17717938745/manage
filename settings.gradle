@@ -1,0 +1,4 @@
+rootProject.name = 'manage'
+
+include 'common-api', 'html-edit-api', 'html-edit-impl', 'system-api', 'system-impl', 'manage-server'
+

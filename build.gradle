@@ -1,0 +1,241 @@
+plugins {
+    id 'base'
+}
+
+ext {
+    JUNIT_VERSION = '4.12'
+    SPRING_BOOT_VERSION = '2.2.8.RELEASE'
+    DRUID_VERSION = '1.1.9'
+    MYSQL_VERSION = '6.0.6'
+    SQLSERVER_VERSION = '4.0'
+    LOMBOK_VERSION = '1.18.8'
+    FASTJSON_VERSION = '1.2.58'
+    SLF4j_VERSION = '1.7.25'
+    LOGBACK_VERSION = '1.2.3'
+    HUTOOL_VERSION = '5.7.3'
+}
+
+allprojects {
+    task hello {
+        doLast {
+            task -> println("I am $task.project.name")
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    group 'com.pch'
+    version = '1.0'
+    sourceCompatibility = '1.8'
+    repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/jcenter'
+        }
+        mavenCentral()
+    }
+    dependencies {
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION
+    }
+    hello {
+        doLast {
+            println 'here is my manager'
+        }
+    }
+    afterEvaluate {
+        project ->
+            if (project.tool) {
+                hello.configure {
+                    doLast {
+                        println('i am java tool for other module')
+                    }
+                }
+            }
+    }
+}
+
+project(':common-api') {
+    apply plugin: 'java-library'
+    ext {
+        tool = false
+    }
+    dependencies {
+        annotationProcessor(
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version
+            )
+        }
+    }
+}
+
+project(':html-edit-api') {
+    apply plugin: 'java-library'
+    ext {
+        tool = false
+    }
+    dependencies {
+        implementation(
+                project(':common-api')
+        )
+        annotationProcessor(
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version
+            )
+        }
+    }
+}
+
+project(':html-edit-impl') {
+    apply plugin: 'java-library'
+    ext {
+        tool = false
+    }
+    dependencies {
+        implementation(
+                project(':common-api'),
+                project(':html-edit-api'),
+                [group: 'com.alibaba', name: 'fastjson', version: rootProject.ext.FASTJSON_VERSION],
+                [group: 'com.alibaba', name: 'druid', version: rootProject.ext.DRUID_VERSION],
+                [group: 'mysql', name: 'mysql-connector-java', version: rootProject.ext.MYSQL_VERSION],
+                [group: 'com.microsoft.sqlserver', name: 'sqljdbc4', version: rootProject.ext.SQLSERVER_VERSION]
+        )
+        annotationProcessor(
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version
+            )
+        }
+    }
+}
+
+project(':system-api') {
+    apply plugin: 'java-library'
+    ext {
+        tool = false
+    }
+    dependencies {
+        implementation(
+                project(':common-api')
+        )
+        annotationProcessor(
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version
+            )
+        }
+    }
+}
+
+project(':system-impl') {
+    apply plugin: 'java-library'
+    ext {
+        tool = false
+    }
+    dependencies {
+        implementation(
+                project(':common-api'),
+                project(':system-api'),
+                [group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68'],
+                [group: 'cn.hutool', name: 'hutool-crypto', version: rootProject.ext.HUTOOL_VERSION],
+                [group: 'cn.hutool', name: 'hutool-json', version: rootProject.ext.HUTOOL_VERSION],
+                [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30']
+        )
+        annotationProcessor(
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+    }
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version
+            )
+        }
+    }
+}
+
+project(':manage-server') {
+    buildscript {
+        dependencies {
+            classpath group: 'org.springframework.boot', name: 'spring-boot-gradle-plugin', version: rootProject.ext.SPRING_BOOT_VERSION
+        }
+    }
+    apply plugin: 'idea'
+    ext {
+        tool = false
+    }
+    configurations {
+        developmentOnly
+        runtimeClasspath {
+            extendsFrom developmentOnly
+        }
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+        compile.exclude module: 'spring-boot-starter-tomcat'
+    }
+    dependencies {
+        implementation(
+                project(':common-api'),
+                project(':html-edit-api'),
+                project(':html-edit-impl'),
+                project(':system-api'),
+                project(':system-impl'),
+                [group: 'com.alibaba', name: 'druid', version: rootProject.ext.DRUID_VERSION],
+                [group: 'mysql', name: 'mysql-connector-java', version: rootProject.ext.MYSQL_VERSION],
+                [group: 'com.microsoft.sqlserver', name: 'sqljdbc4', version: rootProject.ext.SQLSERVER_VERSION],
+                [group: 'org.springframework.boot', name: 'spring-boot-dependencies', version: rootProject.ext.SPRING_BOOT_VERSION],
+                [group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: rootProject.ext.SPRING_BOOT_VERSION],
+                [group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker', version: rootProject.ext.SPRING_BOOT_VERSION],
+                [group: 'org.springframework.boot', name: 'spring-boot-starter-undertow', version: rootProject.ext.SPRING_BOOT_VERSION],
+                [group: 'net.coobird', name: 'thumbnailator', version: '0.4.12'],
+                [group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.68'],
+                [group: 'cn.hutool', name: 'hutool-crypto', version: rootProject.ext.HUTOOL_VERSION],
+                [group: 'com.google.zxing', name: 'core', version: '3.3.3'],
+                [group: 'cn.hutool', name: 'hutool-json', version: rootProject.ext.HUTOOL_VERSION]
+        )
+        annotationProcessor(
+                [group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: rootProject.ext.SPRING_BOOT_VERSION],
+                [group: 'org.projectlombok', name: 'lombok', version: rootProject.ext.LOMBOK_VERSION]
+        )
+        components {
+            withModule('org.springframework:spring-beans') {
+                allVariants {
+                    withDependencyConstraints {
+                        it.findAll { it.name == 'snakeyaml' }.each {
+                            it.version { strictly '1.19' }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+project(':manage-server').hello {
+    doLast {
+        println('I am manage web server application')
+    }
+}

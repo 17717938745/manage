@@ -1,0 +1,39 @@
+server:
+  undertow:
+    io-threads: 8
+    worker-threads: 32
+    buffer-size: 64
+  port: 80
+  servlet:
+    context-path: /
+logging:
+  config: file:${com.pch.resources.static-path}logback.xml
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: manage-server
+  resources:
+    static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,file:${com.pch.resources.static-path}
+  freemarker:
+    suffix: .ftl
+    template-loader-path: file:${com.pch.resources.static-path}templates/
+  servlet:
+    multipart:
+      max-file-size: 102400KB
+      max-request-size: 102400KB
+      location: ${com.pch.resources.upload-path}temp/
+
+com:
+  pch:
+    resources:
+      public-url-prefix: http://localhost:${server.port}${server.servlet.context-path}/
+      uri-prefix: upload/
+      static-path: /Users/pch/Program/resources/git/manage/static/
+      upload-dir: upload
+      upload-path: ${com.pch.resources.static-path}${com.pch.resources.upload-dir}/
+    datasource:
+      home:
+        url: jdbc:mysql://localhost:3306/home
+        username: pch
+        password: 112233
